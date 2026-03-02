@@ -1,0 +1,31 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: '<your-azure-container-registry-service-connection>'
+    repository: 'attractive-calculator-flask'
+    command: 'buildAndPush'
+    Dockerfile: 'Dockerfile'
+    tags: |
+      $(Build.BuildId)
+
+- task: AzureWebAppContainer@1
+  inputs:
+    azureSubscription: '<your-azure-subscription-service-connection>'
+    appName: '<your-azure-webapp-name>'
+    containers: 'attractive-calculator-flask:$(Build.BuildId)'
